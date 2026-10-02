@@ -1,0 +1,183 @@
+---
+title: "WAEMU Macro Snapshot: Analysis"
+author: "Samira Ouattara"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
+                      fig.width = 10, fig.height = 5.5, dpi = 150)
+# Runs the script so `weo`, `summary_tbl` and `brent` exist here.
+# Keep this file in the same folder as waemu_analysis.R and the WEO Excel file.
+source("waemu_analysis.R")
+```
+
+## Question
+
+How have growth, inflation and public debt in the WAEMU countries changed since 2015-2019, and what do the IMF's April 2026 projections imply as oil prices rise?
+
+Data: IMF World Economic Outlook, April 2026. Recent years are estimates and projections. Events mentioned below are context from the sources listed at the end. They help explain the numbers, but I have not tested them as causes.
+
+## 1. Which countries added the most debt?
+
+```{r debt-change}
+summary_tbl |>
+  filter(indicator == "Gross public debt (% of GDP)") |>
+  select(country, avg_2015_2019, proj_2026, change_vs_baseline) |>
+  arrange(desc(change_vs_baseline)) |>
+  mutate(across(where(is.numeric), ~ round(.x, 1)))
+```
+
+```{r debt-charts, echo=FALSE}
+p_debt
+p_debt_change
+```
+
+**My reading:** Every country has more debt than in 2015-2019. Senegal is in a class of its own, up about 73 points of GDP to roughly 132%. Côte d'Ivoire (+22) and Benin (+20) come next, and Togo is lowest (+8).
+
+For the rest of the region, debt rises around 2020 and again after 2022. That fits the COVID spending and revenue hit, then the 2022 food and energy price shock and tighter global financing. Most of these countries peak around 2024 and are projected to edge down.
+
+Looking at the full chart, Côte d'Ivoire's debt falls from about 50% of GDP in 2011 to about 25% in 2012. That lines up with the 2012 HIPC debt relief (more than $4 billion), right after the 2010-2011 post-election crisis, when GDP shrank by almost 5% in 2011.
+
+### Why Senegal is different
+
+Two things happened at once: the debt was bigger than reported, and the deficits were very large.
+
+```{r senegal-fiscal}
+sen_fiscal <- raw |>
+  filter(`COUNTRY.ID` == "SEN",
+         `INDICATOR.ID` %in% c("GGXWDG_NGDP", "GGXCNL_NGDP", "GGR_NGDP", "GGX_NGDP")) |>
+  select(indicator_id = `INDICATOR.ID`, matches("^[0-9]{4}$")) |>
+  pivot_longer(matches("^[0-9]{4}$"), names_to = "year", values_to = "value") |>
+  mutate(year = as.integer(year), value = as.numeric(value)) |>
+  filter(year %in% 2015:2027) |>
+  pivot_wider(names_from = indicator_id, values_from = value) |>
+  rename(debt = GGXWDG_NGDP, overall_balance = GGXCNL_NGDP,
+         revenue = GGR_NGDP, spending = GGX_NGDP)
+
+sen_fiscal |> mutate(across(-year, ~ round(.x, 1)))
+```
+
+```{r senegal-cumulative}
+cum_check <- function(from, to) {
+  tibble(
+    period = paste(from, "to", to),
+    debt_change = sen_fiscal$debt[sen_fiscal$year == to] -
+                  sen_fiscal$debt[sen_fiscal$year == from],
+    cumulative_deficits = -sum(sen_fiscal$overall_balance[
+      sen_fiscal$year > from & sen_fiscal$year <= to])
+  )
+}
+
+bind_rows(cum_check(2015, 2019), cum_check(2019, 2024), cum_check(2022, 2024)) |>
+  mutate(across(where(is.numeric), ~ round(.x, 1)))
+```
+
+```{r senegal-chart, echo=FALSE}
+sen_fiscal |>
+  pivot_longer(-year, names_to = "series", values_to = "value") |>
+  mutate(series = factor(series,
+                         levels = c("debt", "overall_balance", "spending", "revenue"),
+                         labels = c("Public debt", "Overall balance", "Spending", "Revenue"))) |>
+  ggplot(aes(year, value)) +
+  geom_line(colour = "#000000", linewidth = 1.1) +
+  facet_wrap(~ series, scales = "free_y", nrow = 1) +
+  scale_x_continuous(breaks = c(2015, 2020, 2025)) +
+  labs(title = "Senegal: debt and fiscal position",
+       subtitle = "% of GDP. Each panel has its own scale. 2025 onward are estimates and projections",
+       x = NULL, y = "% of GDP",
+       caption = "Source: IMF World Economic Outlook, April 2026")
+```
+
+**1. Hidden debt came to light.** A court audit found undisclosed borrowing going back to 2019. One estimate puts unrecorded external debt at about 16% of GDP by the end of 2023, including roughly $2 billion of unreported disbursements in 2023 alone. The audit put 2023 debt near 99.7% of GDP and the 2023 deficit at 12.3%, against 74% to 81% and 4.9% in the figures reported at the time. So part of the jump is old borrowing becoming visible. The exact levels differ by source and vintage, which is why this WEO file (118% for 2023) does not match the audit number.
+
+**2. The deficits were very large.** The overall deficit was about 3% to 4% of GDP from 2015 to 2018, then sits between 10% and 16% from 2019 to 2024. The reason is spending, which goes from about 23% of GDP in 2018 to between 29% and 36%, while revenue stays flat near 20%. In the second table, debt rose 27.7 points from 2022 to 2024, and cumulative deficits add up to 28.2 points, so deficits explain almost all of the recent rise. From 2019 to 2024 the deficits add up to more (67.6 points) than the debt increase (50.9), because growth and inflation made the economy bigger and pulled the ratio down.
+
+**A caution about the data:** the series jumps in 2019, with debt up 20 points in one year and the deficit going from 3.7% to 13.9%. This probably reflects restated figures from the audit, not a single-year shock. I have not confirmed how the IMF revised the history, so I read the 2019 jump with care.
+
+**Where it stands now:** debt is projected to level off near 132% as deficits narrow to about 8% in 2025 and about 6% to 7% in 2026 and 2027. The IMF paused its earlier program, and on September 1, 2026 it reached a staff-level agreement on a new 36-month, $2.2 billion program. The government chose to "reprofile" its debt (longer maturities, new interest rates) rather than restructure it, and debt in CFA francs is excluded. My data is from the April 2026 WEO, so it predates that agreement.
+
+**What I could not find:** what the extra spending was for (investment projects, subsidies, state companies). I make no claim about that without a source.
+
+## 2. Does inflation move with oil prices?
+
+```{r infl-oil}
+infl_oil <- weo |>
+  filter(indicator_id == "PCPIPCH", year >= 2010, year <= 2025) |>
+  left_join(brent, by = "year")
+
+infl_oil |>
+  group_by(country) |>
+  summarise(correlation = round(cor(value, usd_per_barrel, use = "complete.obs"), 2),
+            years = n())
+```
+
+```{r infl-charts, echo=FALSE}
+p_infl
+p_brent
+```
+
+**My reading:** The correlation is positive for every country but weak to moderate (about 0.2 to 0.4 in the level of oil prices). When I use the change in oil prices, Mali, Burkina Faso and Côte d'Ivoire are higher, near 0.5. Each country has only 16 yearly points, so I would not call any of this strong evidence.
+
+The calendar explains why. In 2022 oil was near $99 and inflation spiked, but the war in Ukraine also pushed up food and energy prices more broadly, and the regional central bank (BCEAO) raised rates from 2022 through 2023. In 2025 oil fell to about $68, but inflation dropped to roughly zero or below mainly because of strong domestic harvests and cheaper imports, according to regional reporting. Niger's deflation of about 4.7% is an example. So oil matters, but food prices and harvests look just as important in this region.
+
+The projections show a modest rebound (0.4% to 2.8% in 2026), consistent with a regional target of 1 to 3% and an oil price near $80.
+
+## 3. What happened in Senegal?
+
+```{r senegal}
+weo |>
+  filter(country == "Senegal", year >= 2019,
+         indicator_id %in% c("NGDP_RPCH", "GGXWDG_NGDP", "BCA_NGDPD")) |>
+  select(year, indicator, value, projection) |>
+  pivot_wider(names_from = indicator, values_from = value)
+```
+
+```{r growth-chart, echo=FALSE}
+p_growth
+```
+
+**My reading:** Debt climbs every year from 81% of GDP in 2019 to about 132% in 2024 and stays there in the projections. Growth jumps to 7.9% in 2025 and then falls to 2.2% in 2026, about 4 points below its 2015-2019 average. The current account deficit narrows from about 20% of GDP in 2022 and 2023 to about 6% in 2025.
+
+The improvement in 2025 matches reporting that Senegal's growth was driven by oil, while underlying weakness persisted. I think the 2026 slowdown reflects the oil boost fading, a government under debt pressure, and a paused IMF program. This is my interpretation. I did not find a source that explains the IMF's exact 2.2%, so it is a hypothesis I would check against the IMF country report.
+
+Note that the WEO shows 7.9% growth for 2025, while the World Bank estimate I found is lower (6.7%). Different sources and dates give different numbers.
+
+## 4. Burkina Faso's current account swing
+
+```{r burkina}
+weo |>
+  filter(country == "Burkina Faso", year >= 2018, indicator_id == "BCA_NGDPD") |>
+  select(year, value, projection)
+```
+
+```{r ca-chart, echo=FALSE}
+p_ca
+```
+
+**My reading:** The balance moves between deficit and surplus: about +4% in 2020, deep deficits in 2022 and 2023, then +6.7% in 2025 and +8.6% in the 2026 projection.
+
+The most likely driver is gold. An IMF program review reports gold exports up 43% in 2025 on prices around $3,200 an ounce, and says this shifted the external position into surplus. Burkina Faso also had two coups in 2022 and a worsening security situation, and the IMF's growth forecast depends on security improving. Fiscal policy also tightened, with the deficit falling from 5.8% to 3.5% of GDP.
+
+One thing to check: that review puts the 2025 surplus at only 1.1% of GDP, while the April 2026 WEO shows 6.7%. I do not know the reason (different vintage or definition), so I treat the size of the surplus as uncertain and the direction as solid.
+
+## 5. Conclusions and limits
+
+- **Debt is the main vulnerability.** All eight countries have more debt than in 2015-2019, and Senegal is in a different category, with debt above 130% of GDP and a restructuring under discussion.
+- **Oil is a bounce, not a shock.** Brent rises to about $80 in 2026, below the 2022 level, and projected inflation stays within a low range. The bigger drivers in this region look like food prices, harvests and global conditions.
+- **Politics and security shape the outliers.** Burkina Faso's gold-driven surplus and Niger's oil exports and post-coup sanctions show that country events matter as much as global prices.
+- **Limits:** these are projections, not facts. Eight countries is a small sample, and I tested no causes. The data says nothing about foreign aid, which the IMF has flagged as a risk.
+- **Next steps:** compare these figures with the IMF country reports, look at Senegal's debt revisions across WEO vintages, and add aid data from the World Bank.
+
+## Sources
+
+- [FinDevLab: hidden debt of Senegal](https://findevlab.org/what-we-learn-from-the-new-international-debt-statistics-on-the-hidden-debt-of-senegal/)
+- [Credendo: Senegal fiscal position worse than stated](https://credendo.com/en/knowledge-hub/senegal-fiscal-position-significantly-worse-previously-stated)
+- [Engineering News: Senegal debt, September 2026](https://www.engineeringnews.co.za/article/light-at-the-end-of-senegals-debt-tunnel-2026-09-25)
+- [Bretton Woods Project: Senegal's hidden debt](https://www.brettonwoodsproject.org/2025/12/senegals-hidden-debt-sparks-questions-about-imfs-oversight/)
+- [Ecofin: BCEAO cuts key rate as WAEMU faces deflation](https://www.ecofinagency.com/news-finances/0503-53481-bceao-cuts-key-rate-to-3-00-as-waemu-faces-deflation)
+- [Ecofin: IMF fourth review of Burkina Faso](https://www.ecofinagency.com/news/1902-53078-imf-completes-fourth-review-of-burkina-fasos-extended-credit-facility-and-approves-124-3-million-climate-resilience-program)
+- [World Bank: Niger overview](https://www.worldbank.org/en/country/niger/overview)
+- [Ecofin: Senegal's growth driven by oil](https://www.ecofinagency.com/news/1004-54577-senegal-s-growth-rises-to-6-7-driven-by-oil-as-underlying-weakness-persists)
+- [World Bank and IMF: debt relief for Côte d'Ivoire, June 2012](https://www.worldbank.org/en/news/press-release/2012/06/26/imf-world-bank-announce-more-than-4-billion-debt-relief-cote-divoire)
+- IMF World Economic Outlook database, April 2026

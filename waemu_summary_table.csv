@@ -1,0 +1,33 @@
+country,indicator,avg_2015_2019,y2024,y2025,proj_2026,proj_2027,change_vs_baseline
+Burkina Faso,Current account balance (% of GDP),-5.2232,-3.484,6.71,8.594,8.43,13.8172
+Niger,Current account balance (% of GDP),-12.603,-5.627,-4.993,-6.137,-3.951,6.466
+Mali,Current account balance (% of GDP),-5.4026,-4.328,-0.841,-1.49,1.569,3.9125999999999994
+Côte d'Ivoire,Current account balance (% of GDP),-1.8864,-4.467,-1.099,-1.058,-3.096,0.8284
+Togo,Current account balance (% of GDP),-3.9194,-2.436,-1.016,-3.178,-2.774,0.7414000000000001
+Senegal,Current account balance (% of GDP),-6.7812,-11.279,-5.593,-6.215,-5.798,0.5662000000000003
+Benin,Current account balance (% of GDP),-4.3122,-6.042,-5.665,-4.959,-4.863,-0.6467999999999998
+Guinea-Bissau,Current account balance (% of GDP),-1.7166000000000001,-7.412,-6.163,-6.318,-5.108,-4.6014
+Senegal,Gross public debt (% of GDP),59.2364,132.395,130.162,132.287,133.443,73.0506
+Côte d'Ivoire,Gross public debt (% of GDP),33.0836,59.459,56.322,55.066,53.967,21.982400000000005
+Benin,Gross public debt (% of GDP),37.482,60.527,57.272,57.23,55.62,19.747999999999998
+Guinea-Bissau,Gross public debt (% of GDP),58.2844,82.427,75.318,73.598,71.811,15.313600000000001
+Burkina Faso,Gross public debt (% of GDP),35.5678,57.247,52.027,48.847,47.127,13.279200000000003
+Mali,Gross public debt (% of GDP),30.3454,44.027,41.893,40.811,39.672,10.465599999999998
+Niger,Gross public debt (% of GDP),35.200199999999995,47.741,45.37,45.465,44.939,10.264800000000008
+Togo,Gross public debt (% of GDP),56.471,66.213,63.001,64.686,63.053,8.21500000000001
+Mali,"Inflation, avg consumer prices (%)",0.1802,3.176,2.3,2.2,2,2.0198
+Togo,"Inflation, avg consumer prices (%)",0.8094,2.876,0.419,2.8,2.3,1.9905999999999997
+Benin,"Inflation, avg consumer prices (%)",0.22539999999999996,1.165,1.126,2,2,1.7746
+Guinea-Bissau,"Inflation, avg consumer prices (%)",0.9338,3.704,0.864,2.5,2.1,1.5662
+Senegal,"Inflation, avg consumer prices (%)",0.9358,0.802,1.441,2.457,2.243,1.5211999999999999
+Burkina Faso,"Inflation, avg consumer prices (%)",0.46,4.193,-0.55,1.531,2.061,1.071
+Côte d'Ivoire,"Inflation, avg consumer prices (%)",0.7882,3.443,0.125,1.8,2,1.0118
+Niger,"Inflation, avg consumer prices (%)",0.31520000000000004,9.069,-4.561,0.437,2,0.12179999999999996
+Benin,Real GDP growth (%),4.8826,7.453,7.5,6.972,6.698,2.0894000000000004
+Niger,Real GDP growth (%),5.657,10.3,6.9,6.728,6.549,1.0709999999999997
+Togo,Real GDP growth (%),4.9856,6.319,5.889,5,5.3,0.01440000000000019
+Mali,Real GDP growth (%),5.4976,5.017,4.9,5.5,5.7,0.0023999999999997357
+Guinea-Bissau,Real GDP growth (%),4.8984000000000005,4.8,5.5,4.9,4.9,0.0015999999999998238
+Côte d'Ivoire,Real GDP growth (%),6.998,6.02,6.5,6.2,6.3,-0.798
+Burkina Faso,Real GDP growth (%),5.7152,4.8,4.995,4.858,4.8,-0.8572000000000006
+Senegal,Real GDP growth (%),6.1906,6.143,7.881,2.173,2.284,-4.0176
